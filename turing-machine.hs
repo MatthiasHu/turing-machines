@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Control.Monad
@@ -22,6 +24,9 @@ newtype Machine = Machine (M.Map StateName (Bit -> StateCode))
 
 type StateName = String
 
+stopStateName :: StateName
+stopStateName = "stop"
+
 data Movement = L | R
 
 movement :: Movement -> Int
@@ -43,7 +48,8 @@ showExecution' m s@(sn, t, pos) = do
   showTape t pos
   putStrLn sn
   _ <- getLine
-  showExecution' m (step m s)
+  when (sn /= stopStateName) $
+    showExecution' m (step m s)
 
 showTape :: Tape -> Int -> IO ()
 showTape t pos = do
@@ -52,5 +58,35 @@ showTape t pos = do
   forM_ [l..r] $ \n -> (putStr $ " " ++ show (getTapeBit n t))
   putStrLn ""
   where
-    l = -10
-    r = 20
+    l = -5
+    r = 30
+
+
+-- example machines
+
+machineTimesTwo :: Machine
+machineTimesTwo = Machine . M.fromList $
+  [ ( "start"
+    , \case O -> StateCode O R "stop"
+            I -> StateCode O R "skip_right_two"
+    )
+  , ( "skip_right_two"
+    , \case O -> StateCode O R "skip_right_one"
+            I -> StateCode I R "skip_right_two"
+    )
+  , ( "skip_right_one"
+    , \case O -> StateCode I R "write_two_1"
+            I -> StateCode I R "skip_right_one"
+    )
+  , ( "write_two_1"
+    , \case _ -> StateCode I L "skip_left_two"
+    )
+  , ( "skip_left_two"
+    , \case O -> StateCode O L "skip_left_one"
+            I -> StateCode I L "skip_left_two"
+    )
+  , ( "skip_left_one"
+    , \case O -> StateCode O R "start"
+            I -> StateCode I L "skip_left_one"
+    )
+  ]
