@@ -58,8 +58,8 @@ showTape t pos = do
   forM_ [l..r] $ \n -> (putStr $ " " ++ show (getTapeBit n t))
   putStrLn ""
   where
-    l = -5
-    r = 30
+    l = -10
+    r = 28
 
 
 -- example machines
@@ -88,5 +88,35 @@ machineTimesTwo = Machine . M.fromList $
   , ( "skip_left_one"
     , \case O -> StateCode O R "start"
             I -> StateCode I L "skip_left_one"
+    )
+  ]
+
+-- Writes four 1s and halts.
+busy2 :: Machine
+busy2 = Machine . M.fromList $
+  [ ( "A"
+    , \case O -> StateCode I R "B"
+            I -> StateCode I L "B"
+    )
+  , ( "B"
+    , \case O -> StateCode I L "A"
+            I -> StateCode I L "stop"
+    )
+  ]
+
+-- Writes six 1s and halts.
+busy3 :: Machine
+busy3 = Machine . M.fromList $
+  [ ( "A"
+    , \case O -> StateCode I R "B"
+            I -> StateCode I L "C"
+    )
+  , ( "B"
+    , \case O -> StateCode I L "A"
+            I -> StateCode I R "B"
+    )
+  , ( "C"
+    , \case O -> StateCode I L "B"
+            I -> StateCode I L "stop"
     )
   ]
